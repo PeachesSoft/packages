@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -8,6 +8,7 @@ import XCTest
 
 @testable import in_app_purchase_storekit
 
+@available(iOS 13.0, *)
 final class FIAPPaymentQueueDelegateTests: XCTestCase {
   var transaction: SKPaymentTransaction!
   var storefront: SKStorefront!

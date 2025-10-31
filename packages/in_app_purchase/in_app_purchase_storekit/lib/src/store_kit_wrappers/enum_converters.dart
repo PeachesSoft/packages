@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -24,17 +24,14 @@ class SKTransactionStatusConverter
       return SKPaymentTransactionStateWrapper.unspecified;
     }
     return $enumDecode<SKPaymentTransactionStateWrapper, dynamic>(
-      _$SKPaymentTransactionStateWrapperEnumMap
-          .cast<SKPaymentTransactionStateWrapper, dynamic>(),
-      json,
-    );
+        _$SKPaymentTransactionStateWrapperEnumMap
+            .cast<SKPaymentTransactionStateWrapper, dynamic>(),
+        json);
   }
 
   /// Converts an [SKPaymentTransactionStateWrapper] to a [PurchaseStatus].
   PurchaseStatus toPurchaseStatus(
-    SKPaymentTransactionStateWrapper object,
-    SKError? error,
-  ) {
+      SKPaymentTransactionStateWrapper object, SKError? error) {
     switch (object) {
       case SKPaymentTransactionStateWrapper.purchasing:
       case SKPaymentTransactionStateWrapper.deferred:
@@ -77,10 +74,9 @@ class SKSubscriptionPeriodUnitConverter
       return SKSubscriptionPeriodUnit.day;
     }
     return $enumDecode<SKSubscriptionPeriodUnit, dynamic>(
-      _$SKSubscriptionPeriodUnitEnumMap
-          .cast<SKSubscriptionPeriodUnit, dynamic>(),
-      json,
-    );
+        _$SKSubscriptionPeriodUnitEnumMap
+            .cast<SKSubscriptionPeriodUnit, dynamic>(),
+        json);
   }
 
   @override
@@ -103,10 +99,9 @@ class SKProductDiscountPaymentModeConverter
       return SKProductDiscountPaymentMode.payAsYouGo;
     }
     return $enumDecode<SKProductDiscountPaymentMode, dynamic>(
-      _$SKProductDiscountPaymentModeEnumMap
-          .cast<SKProductDiscountPaymentMode, dynamic>(),
-      json,
-    );
+        _$SKProductDiscountPaymentModeEnumMap
+            .cast<SKProductDiscountPaymentMode, dynamic>(),
+        json);
   }
 
   @override
@@ -121,7 +116,6 @@ class _SerializedEnums {
   late SKPaymentTransactionStateWrapper response;
   late SKSubscriptionPeriodUnit unit;
   late SKProductDiscountPaymentMode discountPaymentMode;
-  late SKProductDiscountType discountType;
 }
 
 /// Serializer for [SKProductDiscountType].
@@ -139,9 +133,8 @@ class SKProductDiscountTypeConverter
       return SKProductDiscountType.introductory;
     }
     return $enumDecode<SKProductDiscountType, dynamic>(
-      _$SKProductDiscountTypeEnumMap.cast<SKProductDiscountType, dynamic>(),
-      json,
-    );
+        _$SKProductDiscountTypeEnumMap.cast<SKProductDiscountType, dynamic>(),
+        json);
   }
 
   @override

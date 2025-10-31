@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,17 +13,19 @@ final class ObjectTranslatorTest: XCTestCase {
     ["numberOfUnits": 0, "unit": 0]
   }
   private var discountMap: [String: Any] {
-    // Type is being instantiated like this because of Swift naming weirdness
-    let type: SKProductDiscount.`Type` = .introductory
     var map: [String: Any] = [
-      "identifier": "test offer id",
       "price": "1",
       "priceLocale": FIAObjectTranslator.getMapFrom(NSLocale.system),
       "numberOfPeriods": 1,
       "subscriptionPeriod": periodMap,
       "paymentMode": 1,
-      "type": type.rawValue,
     ]
+    if #available(iOS 12.2, *) {
+      map["identifier"] = "test offer id"
+      // Type is being instantiated like this because of Swift naming weirdness
+      let type: SKProductDiscount.`Type` = .introductory
+      map["type"] = type.rawValue
+    }
     return map
   }
   private var discountMissingIdentifierMap: [String: Any] {
@@ -38,8 +40,7 @@ final class ObjectTranslatorTest: XCTestCase {
     ]
   }
   private var productMap: [String: Any] {
-    [
-      "discounts": [discountMap],
+    var map: [String: Any] = [
       "price": "1",
       "priceLocale": FIAObjectTranslator.getMapFrom(NSLocale.system),
       "productIdentifier": "123",
@@ -49,6 +50,10 @@ final class ObjectTranslatorTest: XCTestCase {
       "introductoryPrice": discountMap,
       "subscriptionGroupIdentifier": "com.group",
     ]
+    if #available(iOS 12.2, *) {
+      map["discounts"] = [discountMap]
+    }
+    return map
   }
   private var productResponseMap: [String: Any] {
     ["products": [productMap], "invalidProductIdentifiers": []]
@@ -253,195 +258,217 @@ final class ObjectTranslatorTest: XCTestCase {
   }
 
   func testSKStorefrontToMap() {
-    let storefront = SKStorefrontStub(map: storefrontMap)
-    let map = FIAObjectTranslator.getMapFrom(storefront)
+    if #available(iOS 13.0, *) {
+      let storefront = SKStorefrontStub(map: storefrontMap)
+      let map = FIAObjectTranslator.getMapFrom(storefront)
 
-    XCTAssertEqual(map as NSDictionary, storefrontMap as NSDictionary)
+      XCTAssertEqual(map as NSDictionary, storefrontMap as NSDictionary)
+    }
   }
 
   func testSKStorefrontAndSKPaymentTransactionToMap() {
-    let storefront = SKStorefrontStub(map: storefrontMap)
-    let transaction = SKPaymentTransactionStub(map: transactionMap)
-    let map = FIAObjectTranslator.getMapFrom(storefront, andSKPaymentTransaction: transaction)
+    if #available(iOS 13.0, *) {
+      let storefront = SKStorefrontStub(map: storefrontMap)
+      let transaction = SKPaymentTransactionStub(map: transactionMap)
+      let map = FIAObjectTranslator.getMapFrom(storefront, andSKPaymentTransaction: transaction)
 
-    XCTAssertEqual(map as NSDictionary, storefrontAndPaymentTransactionMap as NSDictionary)
+      XCTAssertEqual(map as NSDictionary, storefrontAndPaymentTransactionMap as NSDictionary)
+    }
   }
 
   func testSKPaymentDiscountFromMap() throws {
-    var error: NSString?
-    let paymentDiscount = FIAObjectTranslator.getSKPaymentDiscount(
-      fromMap: paymentDiscountMap, withError: &error)
+    if #available(iOS 12.2, *) {
+      var error: NSString?
+      let paymentDiscount = FIAObjectTranslator.getSKPaymentDiscount(
+        fromMap: paymentDiscountMap, withError: &error)
 
-    XCTAssertNil(error)
+      XCTAssertNil(error)
 
-    let unwrappedDiscount = try XCTUnwrap(paymentDiscount)
-    let unwrappedNonce = try XCTUnwrap(paymentDiscountMap["nonce"] as? String)
+      let unwrappedDiscount = try XCTUnwrap(paymentDiscount)
+      let unwrappedNonce = try XCTUnwrap(paymentDiscountMap["nonce"] as? String)
 
-    XCTAssertEqual(unwrappedDiscount.identifier, paymentDiscountMap["identifier"] as? String)
-    XCTAssertEqual(
-      unwrappedDiscount.keyIdentifier, paymentDiscountMap["keyIdentifier"] as? String)
-    XCTAssertEqual(
-      unwrappedDiscount.nonce, UUID(uuidString: unwrappedNonce))
-    XCTAssertEqual(unwrappedDiscount.signature, paymentDiscountMap["signature"] as? String)
-    XCTAssertEqual(unwrappedDiscount.timestamp as? Int, paymentDiscountMap["timestamp"] as? Int)
+      XCTAssertEqual(unwrappedDiscount.identifier, paymentDiscountMap["identifier"] as? String)
+      XCTAssertEqual(
+        unwrappedDiscount.keyIdentifier, paymentDiscountMap["keyIdentifier"] as? String)
+      XCTAssertEqual(
+        unwrappedDiscount.nonce, UUID(uuidString: unwrappedNonce))
+      XCTAssertEqual(unwrappedDiscount.signature, paymentDiscountMap["signature"] as? String)
+      XCTAssertEqual(unwrappedDiscount.timestamp as? Int, paymentDiscountMap["timestamp"] as? Int)
+    }
   }
 
   func testSKPaymentDiscountFromMapMissingIdentifier() {
-    let invalidValues: [Any?] = [NSNull(), 1, ""]
-    for value in invalidValues {
-      let discountMap: [String: Any?] = [
-        "identifier": value,
-        "keyIdentifier": "payment_discount_key_identifier",
-        "nonce": "d18981e0-9003-4365-98a2-4b90e3b62c52",
-        "signature": "this is an encrypted signature",
-        "timestamp": Int(Date().timeIntervalSince1970),
-      ]
-      var error: NSString?
-      let _ = FIAObjectTranslator.getSKPaymentDiscount(
-        fromMap: discountMap as [String: Any], withError: &error)
+    if #available(iOS 12.2, *) {
+      let invalidValues: [Any?] = [NSNull(), 1, ""]
+      for value in invalidValues {
+        let discountMap: [String: Any?] = [
+          "identifier": value,
+          "keyIdentifier": "payment_discount_key_identifier",
+          "nonce": "d18981e0-9003-4365-98a2-4b90e3b62c52",
+          "signature": "this is an encrypted signature",
+          "timestamp": Int(Date().timeIntervalSince1970),
+        ]
+        var error: NSString?
+        let _ = FIAObjectTranslator.getSKPaymentDiscount(
+          fromMap: discountMap as [String: Any], withError: &error)
 
-      XCTAssertNotNil(error)
-      XCTAssertEqual(
-        error, "When specifying a payment discount the 'identifier' field is mandatory.")
+        XCTAssertNotNil(error)
+        XCTAssertEqual(
+          error, "When specifying a payment discount the 'identifier' field is mandatory.")
+      }
     }
   }
 
   func testGetMapFromSKProductDiscountMissingIdentifier() {
-    let discount = SKProductDiscountStub(map: discountMissingIdentifierMap)
-    let map = FIAObjectTranslator.getMapFrom(discount)
+    if #available(iOS 12.2, *) {
+      let discount = SKProductDiscountStub(map: discountMissingIdentifierMap)
+      let map = FIAObjectTranslator.getMapFrom(discount)
 
-    XCTAssertEqual(map as NSDictionary, discountMissingIdentifierMap as NSDictionary)
+      XCTAssertEqual(map as NSDictionary, discountMissingIdentifierMap as NSDictionary)
+    }
   }
 
   func testSKPaymentDiscountFromMapMissingKeyIdentifier() {
-    let invalidValues: [Any?] = [NSNull(), 1, ""]
-    for value in invalidValues {
-      let discountMap: [String: Any?] = [
-        "identifier": "payment_discount_identifier",
-        "keyIdentifier": value,
-        "nonce": "d18981e0-9003-4365-98a2-4b90e3b62c52",
-        "signature": "this is an encrypted signature",
-        "timestamp": Int(Date().timeIntervalSince1970),
-      ]
-      var error: NSString?
-      let _ = FIAObjectTranslator.getSKPaymentDiscount(
-        fromMap: discountMap as [String: Any], withError: &error)
+    if #available(iOS 12.2, *) {
+      let invalidValues: [Any?] = [NSNull(), 1, ""]
+      for value in invalidValues {
+        let discountMap: [String: Any?] = [
+          "identifier": "payment_discount_identifier",
+          "keyIdentifier": value,
+          "nonce": "d18981e0-9003-4365-98a2-4b90e3b62c52",
+          "signature": "this is an encrypted signature",
+          "timestamp": Int(Date().timeIntervalSince1970),
+        ]
+        var error: NSString?
+        let _ = FIAObjectTranslator.getSKPaymentDiscount(
+          fromMap: discountMap as [String: Any], withError: &error)
 
-      XCTAssertNotNil(error)
-      XCTAssertEqual(
-        error, "When specifying a payment discount the 'keyIdentifier' field is mandatory.")
+        XCTAssertNotNil(error)
+        XCTAssertEqual(
+          error, "When specifying a payment discount the 'keyIdentifier' field is mandatory.")
+      }
     }
   }
 
   func testSKPaymentDiscountFromMapMissingNonce() {
-    let invalidValues: [Any?] = [NSNull(), 1, ""]
-    for value in invalidValues {
-      let discountMap: [String: Any?] = [
-        "identifier": "payment_discount_identifier",
-        "keyIdentifier": "payment_discount_key_identifier",
-        "nonce": value,
-        "signature": "this is an encrypted signature",
-        "timestamp": Int(Date().timeIntervalSince1970),
-      ]
-      var error: NSString?
-      let _ = FIAObjectTranslator.getSKPaymentDiscount(
-        fromMap: discountMap as [String: Any], withError: &error)
+    if #available(iOS 12.2, *) {
+      let invalidValues: [Any?] = [NSNull(), 1, ""]
+      for value in invalidValues {
+        let discountMap: [String: Any?] = [
+          "identifier": "payment_discount_identifier",
+          "keyIdentifier": "payment_discount_key_identifier",
+          "nonce": value,
+          "signature": "this is an encrypted signature",
+          "timestamp": Int(Date().timeIntervalSince1970),
+        ]
+        var error: NSString?
+        let _ = FIAObjectTranslator.getSKPaymentDiscount(
+          fromMap: discountMap as [String: Any], withError: &error)
 
-      XCTAssertNotNil(error)
-      XCTAssertEqual(error, "When specifying a payment discount the 'nonce' field is mandatory.")
+        XCTAssertNotNil(error)
+        XCTAssertEqual(error, "When specifying a payment discount the 'nonce' field is mandatory.")
+      }
     }
   }
 
   func testSKPaymentDiscountFromMapMissingSignature() {
-    let invalidValues: [Any?] = [NSNull(), 1, ""]
-    for value in invalidValues {
-      let discountMap: [String: Any?] = [
-        "identifier": "payment_discount_identifier",
-        "keyIdentifier": "payment_discount_key_identifier",
-        "nonce": "d18981e0-9003-4365-98a2-4b90e3b62c52",
-        "signature": value,
-        "timestamp": Int(Date().timeIntervalSince1970),
-      ]
-      var error: NSString?
-      let _ = FIAObjectTranslator.getSKPaymentDiscount(
-        fromMap: discountMap as [String: Any], withError: &error)
+    if #available(iOS 12.2, *) {
+      let invalidValues: [Any?] = [NSNull(), 1, ""]
+      for value in invalidValues {
+        let discountMap: [String: Any?] = [
+          "identifier": "payment_discount_identifier",
+          "keyIdentifier": "payment_discount_key_identifier",
+          "nonce": "d18981e0-9003-4365-98a2-4b90e3b62c52",
+          "signature": value,
+          "timestamp": Int(Date().timeIntervalSince1970),
+        ]
+        var error: NSString?
+        let _ = FIAObjectTranslator.getSKPaymentDiscount(
+          fromMap: discountMap as [String: Any], withError: &error)
 
-      XCTAssertNotNil(error)
-      XCTAssertEqual(
-        error, "When specifying a payment discount the 'signature' field is mandatory.")
+        XCTAssertNotNil(error)
+        XCTAssertEqual(
+          error, "When specifying a payment discount the 'signature' field is mandatory.")
+      }
     }
   }
 
   func testSKPaymentDiscountFromMapMissingTimestamp() {
-    let invalidValues: [Any?] = [NSNull(), "", -1]
-    for value in invalidValues {
-      let discountMap: [String: Any?] = [
-        "identifier": "payment_discount_identifier",
-        "keyIdentifier": "payment_discount_key_identifier",
-        "nonce": "d18981e0-9003-4365-98a2-4b90e3b62c52",
-        "signature": "this is an encrypted signature",
-        "timestamp": value,
-      ]
-      var error: NSString?
-      let _ = FIAObjectTranslator.getSKPaymentDiscount(
-        fromMap: discountMap as [String: Any], withError: &error)
+    if #available(iOS 12.2, *) {
+      let invalidValues: [Any?] = [NSNull(), "", -1]
+      for value in invalidValues {
+        let discountMap: [String: Any?] = [
+          "identifier": "payment_discount_identifier",
+          "keyIdentifier": "payment_discount_key_identifier",
+          "nonce": "d18981e0-9003-4365-98a2-4b90e3b62c52",
+          "signature": "this is an encrypted signature",
+          "timestamp": value,
+        ]
+        var error: NSString?
+        let _ = FIAObjectTranslator.getSKPaymentDiscount(
+          fromMap: discountMap as [String: Any], withError: &error)
 
-      XCTAssertNotNil(error)
-      XCTAssertEqual(
-        error, "When specifying a payment discount the 'timestamp' field is mandatory.")
+        XCTAssertNotNil(error)
+        XCTAssertEqual(
+          error, "When specifying a payment discount the 'timestamp' field is mandatory.")
+      }
     }
   }
 
   func testSKPaymentDiscountFromMapOverflowingTimestamp() throws {
-    let discountMap: [String: Any] = [
-      "identifier": "payment_discount_identifier",
-      "keyIdentifier": "payment_discount_key_identifier",
-      "nonce": "d18981e0-9003-4365-98a2-4b90e3b62c52",
-      "signature": "this is an encrypted signature",
-      "timestamp": 1_665_044_583_595,  // timestamp 2022 Oct
-    ]
-    var error: NSString?
-    let paymentDiscount = FIAObjectTranslator.getSKPaymentDiscount(
-      fromMap: discountMap, withError: &error)
-    XCTAssertNil(error)
+    if #available(iOS 12.2, *) {
+      let discountMap: [String: Any] = [
+        "identifier": "payment_discount_identifier",
+        "keyIdentifier": "payment_discount_key_identifier",
+        "nonce": "d18981e0-9003-4365-98a2-4b90e3b62c52",
+        "signature": "this is an encrypted signature",
+        "timestamp": 1_665_044_583_595,  // timestamp 2022 Oct
+      ]
+      var error: NSString?
+      let paymentDiscount = FIAObjectTranslator.getSKPaymentDiscount(
+        fromMap: discountMap, withError: &error)
+      XCTAssertNil(error)
 
-    let unwrappedPaymentDiscount = try XCTUnwrap(paymentDiscount)
-    let identifier = try XCTUnwrap(discountMap["identifier"] as? String)
-    XCTAssertEqual(unwrappedPaymentDiscount.identifier, identifier)
+      let unwrappedPaymentDiscount = try XCTUnwrap(paymentDiscount)
+      let identifier = try XCTUnwrap(discountMap["identifier"] as? String)
+      XCTAssertEqual(unwrappedPaymentDiscount.identifier, identifier)
 
-    let keyIdentifier = try XCTUnwrap(discountMap["keyIdentifier"] as? String)
-    XCTAssertEqual(unwrappedPaymentDiscount.keyIdentifier, keyIdentifier)
+      let keyIdentifier = try XCTUnwrap(discountMap["keyIdentifier"] as? String)
+      XCTAssertEqual(unwrappedPaymentDiscount.keyIdentifier, keyIdentifier)
 
-    let nonceString = try XCTUnwrap(discountMap["nonce"] as? String)
-    let nonce = try XCTUnwrap(UUID(uuidString: nonceString))
-    XCTAssertEqual(unwrappedPaymentDiscount.nonce, nonce)
+      let nonceString = try XCTUnwrap(discountMap["nonce"] as? String)
+      let nonce = try XCTUnwrap(UUID(uuidString: nonceString))
+      XCTAssertEqual(unwrappedPaymentDiscount.nonce, nonce)
 
-    let signature = try XCTUnwrap(discountMap["signature"] as? String)
-    XCTAssertEqual(unwrappedPaymentDiscount.signature, signature)
+      let signature = try XCTUnwrap(discountMap["signature"] as? String)
+      XCTAssertEqual(unwrappedPaymentDiscount.signature, signature)
 
-    let timestamp = try XCTUnwrap(discountMap["timestamp"] as? Int)
-    XCTAssertEqual(unwrappedPaymentDiscount.timestamp as? Int, timestamp)
+      let timestamp = try XCTUnwrap(discountMap["timestamp"] as? Int)
+      XCTAssertEqual(unwrappedPaymentDiscount.timestamp as? Int, timestamp)
+    }
   }
 
   func testSKPaymentDiscountConvertToPigeon() throws {
-    var error: NSString?
-    let paymentDiscount = try XCTUnwrap(
-      FIAObjectTranslator.getSKPaymentDiscount(
-        fromMap: paymentDiscountMap, withError: &error))
-    let paymentDiscountPigeon = try XCTUnwrap(
-      FIAObjectTranslator.convertPaymentDiscount(
-        toPigeon: paymentDiscount))
+    if #available(iOS 12.2, *) {
+      var error: NSString?
+      let paymentDiscount = try XCTUnwrap(
+        FIAObjectTranslator.getSKPaymentDiscount(
+          fromMap: paymentDiscountMap, withError: &error))
+      let paymentDiscountPigeon = try XCTUnwrap(
+        FIAObjectTranslator.convertPaymentDiscount(
+          toPigeon: paymentDiscount))
 
-    XCTAssertNotNil(paymentDiscountPigeon)
-    XCTAssertEqual(paymentDiscount.identifier, paymentDiscountPigeon.identifier)
-    XCTAssertEqual(paymentDiscount.keyIdentifier, paymentDiscount.keyIdentifier)
-    XCTAssertEqual(paymentDiscount.nonce, UUID(uuidString: paymentDiscountPigeon.nonce))
-    XCTAssertEqual(paymentDiscount.signature, paymentDiscountPigeon.signature)
+      XCTAssertNotNil(paymentDiscountPigeon)
+      XCTAssertEqual(paymentDiscount.identifier, paymentDiscountPigeon.identifier)
+      XCTAssertEqual(paymentDiscount.keyIdentifier, paymentDiscount.keyIdentifier)
+      XCTAssertEqual(paymentDiscount.nonce, UUID(uuidString: paymentDiscountPigeon.nonce))
+      XCTAssertEqual(paymentDiscount.signature, paymentDiscountPigeon.signature)
 
-    let paymentDiscountTimestamp = paymentDiscount.timestamp as? Int
-    let paymentDiscountPigeonTimestamp = paymentDiscountPigeon.timestamp
+      let paymentDiscountTimestamp = paymentDiscount.timestamp as? Int
+      let paymentDiscountPigeonTimestamp = paymentDiscountPigeon.timestamp
 
-    XCTAssertEqual(paymentDiscountTimestamp, paymentDiscountPigeonTimestamp)
+      XCTAssertEqual(paymentDiscountTimestamp, paymentDiscountPigeonTimestamp)
+    }
   }
 
   func testSKErrorConvertToPigeon() throws {
@@ -460,15 +487,17 @@ final class ObjectTranslatorTest: XCTestCase {
   }
 
   func testSKPaymentConvertToPigeon() throws {
-    let payment = FIAObjectTranslator.getSKMutablePayment(fromMap: paymentMap)
-    let msg = try XCTUnwrap(FIAObjectTranslator.convertPayment(toPigeon: payment))
-    let msgRequestData = try XCTUnwrap(msg.requestData)
+    if #available(iOS 12.2, *) {
+      let payment = FIAObjectTranslator.getSKMutablePayment(fromMap: paymentMap)
+      let msg = try XCTUnwrap(FIAObjectTranslator.convertPayment(toPigeon: payment))
+      let msgRequestData = try XCTUnwrap(msg.requestData)
 
-    XCTAssertEqual(payment.productIdentifier, msg.productIdentifier)
-    XCTAssertEqual(payment.requestData, msgRequestData.data(using: .utf8))
-    XCTAssertEqual(payment.quantity, msg.quantity)
-    XCTAssertEqual(payment.applicationUsername, msg.applicationUsername)
-    XCTAssertEqual(payment.simulatesAskToBuyInSandbox, msg.simulatesAskToBuyInSandbox)
+      XCTAssertEqual(payment.productIdentifier, msg.productIdentifier)
+      XCTAssertEqual(payment.requestData, msgRequestData.data(using: .utf8))
+      XCTAssertEqual(payment.quantity, msg.quantity)
+      XCTAssertEqual(payment.applicationUsername, msg.applicationUsername)
+      XCTAssertEqual(payment.simulatesAskToBuyInSandbox, msg.simulatesAskToBuyInSandbox)
+    }
   }
 
   func testSKPaymentTransactionConvertToPigeon() throws {

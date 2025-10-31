@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -39,8 +39,10 @@
         [[SKProductSubscriptionPeriodStub alloc] initWithMap:map[@"subscriptionPeriod"]];
     [self setValue:subscriptionPeriodSub forKey:@"subscriptionPeriod"];
     [self setValue:map[@"paymentMode"] ?: @(0) forKey:@"paymentMode"];
-    [self setValue:map[@"identifier"] ?: [NSNull null] forKey:@"identifier"];
-    [self setValue:map[@"type"] ?: @(0) forKey:@"type"];
+    if (@available(iOS 12.2, *)) {
+      [self setValue:map[@"identifier"] ?: [NSNull null] forKey:@"identifier"];
+      [self setValue:map[@"type"] ?: @(0) forKey:@"type"];
+    }
   }
   return self;
 }
@@ -69,11 +71,14 @@
     [self setValue:discount ?: [NSNull null] forKey:@"introductoryPrice"];
     [self setValue:map[@"subscriptionGroupIdentifier"] ?: [NSNull null]
             forKey:@"subscriptionGroupIdentifier"];
-    NSMutableArray *discounts = [[NSMutableArray alloc] init];
-    for (NSDictionary *discountMap in map[@"discounts"]) {
-      [discounts addObject:[[SKProductDiscountStub alloc] initWithMap:discountMap]];
+    if (@available(iOS 12.2, *)) {
+      NSMutableArray *discounts = [[NSMutableArray alloc] init];
+      for (NSDictionary *discountMap in map[@"discounts"]) {
+        [discounts addObject:[[SKProductDiscountStub alloc] initWithMap:discountMap]];
+      }
+
+      [self setValue:discounts forKey:@"discounts"];
     }
-    [self setValue:discounts forKey:@"discounts"];
   }
   return self;
 }
@@ -605,11 +610,6 @@
     self.registerViewFactoryWithGestureRecognizersBlockingPolicyStub(
         factory, factoryId, gestureRecognizersBlockingPolicy);
   }
-}
-
-// TODO(stuartmorgan): Make this NSObject<FlutterSceneLifeCycleDelegate> once
-// FlutterSceneLifeCycleDelegate has reached stable.
-- (void)addSceneDelegate:(nonnull NSObject *)delegate {
 }
 
 @end

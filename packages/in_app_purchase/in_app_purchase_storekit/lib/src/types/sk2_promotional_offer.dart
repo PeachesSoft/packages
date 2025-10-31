@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -33,7 +33,10 @@ class SK2SubscriptionOfferSignature {
 /// cryptographic signature.
 final class SK2PromotionalOffer {
   /// Creates a new [SK2PromotionalOffer] object.
-  SK2PromotionalOffer({required this.offerId, required this.signature});
+  SK2PromotionalOffer({
+    required this.offerId,
+    required this.signature,
+  });
 
   /// The promotional offer identifier.
   final String offerId;

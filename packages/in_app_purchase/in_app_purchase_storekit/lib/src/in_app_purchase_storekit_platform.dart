@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -31,7 +31,7 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
   InAppPurchaseStoreKitPlatform();
 
   /// Experimental flag for StoreKit2.
-  static bool _useStoreKit2 = true;
+  static bool _useStoreKit2 = false;
 
   /// StoreKit1
   static late SKPaymentQueueWrapper _skPaymentQueueWrapper;

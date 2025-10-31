@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -216,11 +216,13 @@ extension SK2PriceLocaleMessage: Equatable {
 @available(iOS 15.0, macOS 12.0, *)
 extension Product.PurchaseResult {
   func convertToPigeon() -> SK2ProductPurchaseResultMessage {
-    return switch self {
-    case .success(.verified): .success
-    case .success(.unverified): .unverified
-    case .userCancelled: .userCancelled
-    case .pending: .pending
+    switch self {
+    case .success(_):
+      return SK2ProductPurchaseResultMessage.success
+    case .userCancelled:
+      return SK2ProductPurchaseResultMessage.userCancelled
+    case .pending:
+      return SK2ProductPurchaseResultMessage.pending
     @unknown default:
       fatalError()
     }
